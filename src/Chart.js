@@ -96,11 +96,12 @@ const Chart = ({ google }) => {
                     vAxis: { 
                         title: 'temperature (\u2103)',
                         minValue: 0,
-                        maxValue: 100
+                        maxValue: 80
                     },
                     interpolateNulls: false,
-                    width: 600,
-                    height: 400
+                    lineWidth: 1,
+                    width: 1000,
+                    height: 600
                   };
 
                 // Instantiate and draw our chart, passing in some options.
