@@ -183,7 +183,7 @@ const Chart = ({ google }) => {
     // />
     return (
         <>
-          {!google && <Spinner />}
+          {!chart && <Spinner />}
           <div id="pizzaChart" className={!google ? 'd-none' : ''} />
         </>
       )
