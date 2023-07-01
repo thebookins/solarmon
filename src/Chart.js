@@ -82,7 +82,7 @@ const Chart = ({ google }) => {
     useEffect(() => {
         if (google && !chart) {
             const now = new Date();
-            const lastMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+            const lastMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0, 0);
             const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
     
             getData(lastMidnight, nextMidnight).then(data => {
