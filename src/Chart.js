@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import axios from 'axios'
 import { Spinner } from "react-bootstrap";
 // import { Chart as GoogleChart } from 'react-google-charts'
@@ -15,84 +15,70 @@ const url = 'https://bookins-proxy.herokuapp.com/https://emoncms.org/feed/data.j
 // average=0
 // &timeformat=unix&skipmissing=0&limitinterval=0&delta=0'
 
+const addDay = date => {
+    const newDate = new Date(date);
+    newDate.setDate(date.getDate() + 1);
+    return newDate;
+};
+
+const subtractDay = date => {
+    const newDate = new Date(date);
+    newDate.setDate(date.getDate() - 1);
+    return newDate;
+};
 
 const Chart = ({ google }) => {
     // const [data, setData] = useState();
     const [chart, setChart] = useState(null);
 
-    const getData = async (startDate, endDate) => {
-        const dataTables = await Promise.all([482171, 482172, 482173].map(async id => {
-            let response = await axios.get(url, {
-                params: {
-                    apikey: 'b8dbcbcc505ff6e983133f4c3e4296ce',
-                    id,
-                    start: startDate.getTime(),
-                    end: endDate.getTime(),
-                    interval: 60
-                }
-            });
-    
-            const array = response.data.map(sample => [new Date(sample[0]), sample[1]]);
-            array.unshift(['time', `${id}`])
-            return google.visualization.arrayToDataTable(array)
-        }));
+    const now = new Date();
+    const [startDate, setStartDate] = useState(new Date(now.setHours(0, 0, 0, 0)));
+    const [endDate, setEndDate] = useState(new Date(now.setHours(24, 0, 0, 0)));
 
-        // let data = new google.visualization.DataTable();
+    // new Date().setHours(0, 0, 0, 0)
 
-        let data = google.visualization.data.join(dataTables[0], dataTables[1], 'full', [[0, 0]], [1], [1]);
-        return google.visualization.data.join(data, dataTables[2], 'full', [[0, 0]], [1, 2], [1]);
-        // _data = [
-        //     ['time', 'roof'],
-        //     [0, 4],
-        //     [1, 3],
-        //     [2, 4]
-        // ]
+    const oneDayForward = useCallback(() => {
+        setStartDate(addDay)
+        setEndDate(addDay);
+    }, [setStartDate, setEndDate]);
 
-
-        // const roof = google.visualization.arrayToDataTable(_data);
-
-        // response = await axios.get(url, {
-        //     params: {
-        //         apikey: 'b8dbcbcc505ff6e983133f4c3e4296ce',
-        //         id: 482172, // tank
-        //         start: lastMidnight.getTime(),
-        //         end: lastMidnight.getTime() + 24 * 60 * 60 * 1000,
-        //         interval: 60
-        //     }
-        // });
-
-        // _data = response.data;
-        // _data.unshift(['time', 'tank'])
-
-        // _data = [
-        //     ['time', 'tank'],
-        //     [0, 0],
-        //     [1, 1],
-        //     [2, 1]
-        // ]
-
-        // const tank = window.google.visualization.arrayToDataTable(_data);
-        // console.log(tank)
-
-        // return google.visualization.data.join(roof, tank, 'full', [[0, 0]], [1], [1])
-    }
-    
-
+    const oneDayBack = useCallback(() => {
+        setStartDate(subtractDay);
+        setEndDate(subtractDay);
+    }, [setStartDate, setEndDate]);
 
     useEffect(() => {
-        if (google && !chart) {
-            const now = new Date();
-            const lastMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0, 0);
-            const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
+        const getData = async () => {
+            const dataTables = await Promise.all([482171, 482172, 482173].map(async id => {
+                let response = await axios.get(url, {
+                    params: {
+                        apikey: 'b8dbcbcc505ff6e983133f4c3e4296ce',
+                        id,
+                        start: startDate.getTime(),
+                        end: endDate.getTime(),
+                        interval: 60
+                    }
+                });
+        
+                const array = response.data.map(sample => [new Date(sample[0]), sample[1]]);
+                array.unshift(['time', `${id}`])
+                return google.visualization.arrayToDataTable(array)
+            }));
+                
+            let data = google.visualization.data.join(dataTables[0], dataTables[1], 'full', [[0, 0]], [1], [1]);
+            return google.visualization.data.join(data, dataTables[2], 'full', [[0, 0]], [1, 2], [1]);
+        }
     
-            getData(lastMidnight, nextMidnight).then(data => {
+        if (google) {
+            getData().then(data => {
                 const options = {
                     // Material design options
-                    chart: {
-                      title: "Students' Final Grades",
-                      subtitle: "based on hours studied",
-                    },
-                    hAxis: { title: 'time', minValue: lastMidnight, maxValue: nextMidnight},
+                    // chart: {
+                    //   title: "Students' Final Grades",
+                    //   subtitle: "based on hours studied",
+                    // },
+                    title: startDate.toDateString(),
+                    hAxis: { title: 'time', minValue: startDate, maxValue: endDate},
                     vAxis: { 
                         title: 'temperature (\u2103)',
                         minValue: 0,
@@ -132,7 +118,7 @@ const Chart = ({ google }) => {
 
             // setChart(newChart);
         }
-    }, [google, chart, getData]);
+    }, [google, chart, startDate, endDate]);
 
     // useEffect(() => {
     //     async function loadData () {
@@ -184,6 +170,8 @@ const Chart = ({ google }) => {
     return (
         <>
           {!chart && <Spinner />}
+          <button onClick={oneDayBack}>-</button>
+          <button onClick={oneDayForward}>+</button>
           <div id="pizzaChart" className={!google ? 'd-none' : ''} />
         </>
       )
