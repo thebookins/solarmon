@@ -118,7 +118,7 @@ const Chart = ({ google }) => {
 
             // setChart(newChart);
         }
-    }, [google, chart, startDate, endDate]);
+    }, [google, startDate, endDate]);
 
     // useEffect(() => {
     //     async function loadData () {
