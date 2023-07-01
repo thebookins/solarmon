@@ -20,19 +20,19 @@ const Chart = ({ google }) => {
     // const [data, setData] = useState();
     const [chart, setChart] = useState(null);
 
-    const getData = async (startTime, endTime) => {
+    const getData = async (startDate, endDate) => {
         const dataTables = await Promise.all([482171, 482172, 482173].map(async id => {
             let response = await axios.get(url, {
                 params: {
                     apikey: 'b8dbcbcc505ff6e983133f4c3e4296ce',
                     id,
-                    start: startTime,
-                    end: endTime,
+                    start: startDate.getTime(),
+                    end: endDate.getTime(),
                     interval: 60
                 }
             });
     
-            const array = response.data;
+            const array = response.data.map(sample => [new Date(sample[0]), sample[1]]);
             array.unshift(['time', `${id}`])
             return google.visualization.arrayToDataTable(array)
         }));
@@ -82,8 +82,8 @@ const Chart = ({ google }) => {
     useEffect(() => {
         if (google && !chart) {
             const now = new Date();
-            const lastMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).getTime();
-            const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0).getTime();
+            const lastMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+            const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0);
     
             getData(lastMidnight, nextMidnight).then(data => {
                 const options = {
